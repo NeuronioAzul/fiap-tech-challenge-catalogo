@@ -1,7 +1,0 @@
-default:
-  suites:
-    default:
-      paths:
-        - '%paths.base%/features'
-      contexts:
-        - FeatureContext

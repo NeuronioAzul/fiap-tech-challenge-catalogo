@@ -1,5 +1,0 @@
-.env
-.phpunit.result.cache
-.phpunit.cache
-vendor
-test-report.xml
