@@ -1,103 +1,340 @@
-# Serviço de Catálogo
+# FIAP Tech Challenge App - Automação com GitHub Actions
 
-Este é um serviço de catálogo desenvolvido como parte do desafio técnico da FIAP. O serviço gerencia produtos e categorias, fornecendo operações CRUD através de uma API.
+Este repositório contém o código do aplicativo (regras de negócio) e os arquivos docker e Kubernetes para aplicação no cluster EKS usando GitHub Actions.
 
-## Tecnologias Utilizadas
+## Link do Vídeo com a explicação e execução do projeto - Fase 03
 
-- PHP 8.1
-- Slim Framework 4
-- MySQL
-- Docker
-- Composer
-- PHPUnit
+- Vídeo Projeto fase 03: [https://youtu.be/lnCMJ50Y4CE](https://youtu.be/lnCMJ50Y4CE)
+- Cognito + github actions|RDS|EKS|APP|Teste de Integração com o Gognito|Destruir Infra
 
-## Estrutura do Projeto
+<a href="https://youtu.be/lnCMJ50Y4CE">
+    <img width="100%" alt="fase 03" src="https://github.com/user-attachments/assets/a4a451ad-2cb1-4636-af48-162199709863">
+</a>
 
-O projeto segue os princípios da Clean Architecture:
+## Link do Vídeo com a explicação e execução do projeto - Fase 02
 
-- `src/Domain`: Contém as entidades e interfaces de repositório
-- `src/Application`: Contém os DTOs e casos de uso
-- `src/Infrastructure`: Contém os controladores da API e implementações de repositório
+- Kubernetes: [https://youtu.be/lnCMJ50Y4CE](https://youtu.be/pG4ELz6mip8)
+- Terraform|Cloud|CICD: Placeholder
+
+<a href="https://youtu.be/pG4ELz6mip8">
+    <img width="100%" alt="fase 02" src="https://github.com/user-attachments/assets/7124e968-457b-46f4-ae9f-5d9bc42c8dbd">
+</a>
+
+## Intergrantes - GRUPO 47
+
+- RM354121 - Lucas
+- RM354259 - Thiago
+- RM353824 - Raphael
+- RM355935 - Lucas
+- RM354852 - Mauro
+
+## Repositórios Relacionados
+
+- Original
+https://github.com/LucasGarbuyo/fiap-tech-challenge
+
+- App
+https://github.com/LucasMinikel/fiap-tech-challenge-app
+
+- Cognito
+https://github.com/LucasMinikel/fiap-tech-challenge-cognito
+
+- RDS
+https://github.com/LucasMinikel/fiap-tech-challenge-rds
+
+- EKS
+https://github.com/LucasMinikel/fiap-tech-challenge-eks
+
+## Visão Geral
+
+Este projeto utiliza GitHub Actions para automatizar o processo de build, push e deploy da aplicação em um cluster EKS na AWS. O pipeline inclui a construção de imagens Docker, push para o Docker Hub e deploy no Kubernetes.
 
 ## Pré-requisitos
 
-- Docker
-- Docker Compose
+1. Uma conta AWS com acesso ao EKS.
+2. Uma conta no Docker Hub.
+3. Um cluster EKS já configurado.
+4. Secrets configurados no GitHub.
 
-## Instalação e Configuração
+## Configuração do Repositório
 
-1. Clone o repositório:
-git clone 
-favicon
-github.com
- cd fiap-tech-challenge-catalogo
+### 1. Fork do Repositório
+
+Faça um fork deste repositório para sua conta do GitHub.
+
+### 2. Adicionar Política ao Usuário que Criou o Cluster
+> **Importante:** Não crie um novo usuário, utilize o mesmo que foi usado para a criação do cluster.
+Adicione as permissões necessárias para acessar e aplicar a configuração do cluster utilizando a política abaixo. Lembre-se de gerar uma nova.
+
+Política IAM (JSON)
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "eks:DescribeCluster",
+                "eks:ListClusters"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeInstances",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeVpcs",
+                "ec2:CreateSecurityGroup",
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:CreateTags"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "elasticloadbalancing:CreateLoadBalancer",
+                "elasticloadbalancing:DeleteLoadBalancer",
+                "elasticloadbalancing:DescribeLoadBalancers",
+                "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                "elasticloadbalancing:ConfigureHealthCheck",
+                "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                "elasticloadbalancing:CreateTargetGroup",
+                "elasticloadbalancing:DeleteTargetGroup",
+                "elasticloadbalancing:DescribeTargetGroups",
+                "elasticloadbalancing:ModifyTargetGroup",
+                "elasticloadbalancing:RegisterTargets",
+                "elasticloadbalancing:DeregisterTargets"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetRole",
+                "iam:ListRoles",
+                "iam:PassRole"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecr:GetAuthorizationToken",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:GetRepositoryPolicy",
+                "ecr:DescribeRepositories",
+                "ecr:ListImages",
+                "ecr:BatchGetImage",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload",
+                "ecr:PutImage"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "secretsmanager:GetSecretValue",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:DescribeStacks",
+                "cloudformation:ListStacks"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+### 3. Configurar Secrets no GitHub
+
+Para que o workflow funcione corretamente, você precisa configurar os seguintes secrets no seu repositório GitHub:
+
+1. No repositório GitHub, vá para **Settings** > **Secrets and variables** > **Actions** > **New repository secret**.
+2. Adicione os seguintes secrets:
+
+   - `AWS_ACCESS_KEY_ID`: Sua AWS Access Key ID.
+   - `AWS_SECRET_ACCESS_KEY`: Sua AWS Secret Access Key.
+   - `DOCKER_USERNAME`: Seu nome de usuário do Docker Hub.
+   - `DOCKER_PASSWORD`: Sua senha do Docker Hub.
+
+### 4. Configurar Variáveis de Ambiente
+
+O workflow usa algumas variáveis de ambiente que você pode precisar ajustar:
+
+```yaml
+env:
+  AWS_REGION: sa-east-1
+  CLUSTER_NAME: tech-challenge-cluster
+  FPM_IMAGE_NAME: fpm_server
+  WEBSERVER_IMAGE_NAME: webserver
+```
+
+## Estrutura do Projeto
+
+- `.infra/docker/`: Contém os Dockerfiles para o FPM server e o webserver.
+- `.infra/k8s/`: Contém os arquivos YAML de configuração do Kubernetes.
+    - `common/`: Configurações comuns do Kubernetes.
+    - `fpm/`: Configurações específicas para o FPM server.
+    - `webserver/`: Configurações específicas para o webserver.
+
+## Workflows do GitHub Actions
+
+### 1. Build, Push e Deploy
+
+Este workflow é acionado em cada push para a branch `main`. Ele realiza as seguintes ações:
+
+- Faz checkout do código.
+- Configura as credenciais da AWS.
+- Faz login no Docker Hub.
+- Constrói e faz push das imagens Docker para o FPM server e webserver.
+- Recupera secrets do AWS Secrets Manager.
+- Atualiza a configuração do Kubernetes.
+- Aplica as configurações comuns do Kubernetes.
+- Cria ou atualiza secrets no Kubernetes.
+- Aplica as configurações específicas do FPM e webserver.
+- Verifica o status do rollout.
+- Exibe o IP externo dos serviços.
+
+### 2. Destroy Infrastructure
+
+Este workflow é acionado manualmente e é responsável por destruir a infraestrutura. Ele:
+
+- Remove os recursos Kubernetes.
+- Remove os secrets.
+- Verifica a remoção dos recursos.
+
+Para acionar este workflow, vá para a aba "Actions" no GitHub, selecione "Destroy Infrastructure" e siga as instruções.
+
+## Uso
+
+1. Crie uma branch.
+2. Faça suas alterações no código na branch.
+3. Abra um pull request para a branch `main`.
+4. De merge no pull request.
+4. O GitHub Actions irá automaticamente construir, fazer push e implantar sua aplicação.
+5. Você pode acompanhar o progresso na aba "Actions" do GitHub.
+
+## Notas Importantes
+
+- Certifique-se de que seu cluster EKS está configurado corretamente e acessível com as credenciais fornecidas.
+- Revise cuidadosamente as configurações do Kubernetes antes de aplicá-las.
+- O workflow de destruição da infraestrutura deve ser usado com cautela, pois removerá todos os recursos implantados.
+
+## Suporte
+
+Para questões ou problemas, por favor, abra uma issue neste repositório.
+
+## Documentação DDD - Domain Driven Design
+
+Link para a documentação do DDD no site do Miro:
+
+[https://miro.com/app/board/uXjVKQcty_w=/](https://miro.com/app/board/uXjVKQcty_w=/)
+
+Documentação do sistema (DDD) com Event Storming, incluindo todos os passos/tipos de diagrama mostrados na aula 6 do
+módulo de DDD, e utilizando a linguagem ubíqua, dos seguintes fluxos:
+
+ - Realização do pedido e pagamento; 
+ - Preparação e entrega do pedido.
 
 
-2. Crie um arquivo `.env` na raiz do projeto e configure as variáveis de ambiente:
-DB_HOST=db DB_NAME=catalogo DB_USER=root DB_PASS=sua_senha
+## Passo a passo para inicialização da aplicação local
+
+### Se tiver o Make instalado
+
+Use os commandos: 
+
+    `make start`
+
+Para fazer a limpeza da aplicação, use o comando:
+
+    `make clean`
 
 
-3. Inicie os containers Docker:
-docker compose up -d
+### Se não tiver o Make instalado
+
+1. Clone o repositório  
+   `git clone https://github.com/LucasGarbuyo/fiap-tech-challenge.git`
+
+2. Acesse a pasta do projeto com o terminal 
+
+3. Copie o arquivo `.env.example` para `.env`    
+   `cp .env.example .env`
+
+4. Iniciando os containers do Docker.  
+   Esse processo pode demorar um pouco na primeira vez que for executado, pois o docker irá baixar as imagens necessárias para a execução dos containers.  
+   Execute o comando:    
+   `docker-compose up -d`
+
+5. Acesse o container da aplicação com o comando:  
+   `docker exec -it php bash`
+
+6. Para instalar as dependências do projeto, execute o comando dentro do container:  
+   `composer install`
+
+7. Crie uma chave para a aplicação com o comando:  
+   `php artisan key:generate`
+
+8. Para criar as tabelas no banco de dados, execute o comando:  
+   `php artisan migrate:fresh`
+
+9. Para popular o banco de dados, execute o comando:  
+   `php artisan db:seed`
+
+10. Acesse a aplicação com o endereço  
+    [http://localhost:8100](http://localhost:8100)
+
+11. Acesse o Swagger com o endereço  
+    [http://localhost:8100/api/documentation](http://localhost:8100/api/documentation)
+
+## Para remover a aplicação
+
+### Se tiver o Make instalado, use o comando:
+
+    `make clean`
+
+### Se não tiver o Make instalado, siga os passos abaixo:
+
+1. Execute o comando  
+   `docker-compose down`
+2. **(Recomendado)** excluir a pasta do mysql dentro de ./docker/database/volumes/mysql. Vai poupar espaço.  
+   `rm -Rf ./docker/database/volumes/mysql`
 
 
-4. Instale as dependências do projeto:
-docker compose exec app composer install
+## Kubernetes Localmente
 
+### Requisitos
+1. Docker 
+2. Minikube
 
-5. Execute as migrações do banco de dados:
-docker compose exec app php run_migrations.php
+### Passo a passo para inicialização da aplicação
 
+1. Inicie o Minikube 
+   `minikube start`
+2. Habilite o addon de Ingress no Minikube 
+   `minikube addons enable ingress`
+3. Habilite o addon de Metrics no Minikube 
+   `minikube addons enable metrics-server`
+4. Aplique os arquivos de deploy do Kubernetes
+   `make kubectl-deploy-apply`
+5. Para ver o endereço da aplicação, obtenha o IP do Minikube 
+   `minikube ip`      
+6. Para ver o endereço da aplicação, obtenha o IP do Minikube 
+   `minikube dashboard`      
 
-## Executando os Testes
+### Passo a passo para remover da aplicação
 
-Para executar os testes unitários, use o seguinte comando:
-
-docker compose exec app composer test
-
-
-## Uso da API
-
-A API estará disponível em `http://localhost:8082`. Aqui estão alguns exemplos de endpoints:
-
-### Produtos
-
-- Listar todos os produtos: `GET /produtos`
-- Obter um produto específico: `GET /produtos/{id}`
-- Criar um novo produto: `POST /produtos`
-- Atualizar um produto: `PUT /produtos/{id}`
-- Excluir um produto: `DELETE /produtos/{id}`
-
-### Categorias
-
-- Listar todas as categorias: `GET /categorias`
-- Obter uma categoria específica: `GET /categorias/{id}`
-- Criar uma nova categoria: `POST /categorias`
-- Atualizar uma categoria: `PUT /categorias/{id}`
-- Excluir uma categoria: `DELETE /categorias/{id}`
-
-Para mais detalhes sobre os endpoints e formatos de requisição/resposta, consulte a documentação da API.
-
-## Desenvolvimento
-
-Para adicionar novas funcionalidades ou fazer alterações:
-
-1. Crie uma nova branch: `git checkout -b minha-nova-feature`
-2. Faça suas alterações e adicione testes apropriados
-3. Execute os testes para garantir que tudo está funcionando
-4. Faça commit das suas alterações: `git commit -am 'Adiciona nova feature'`
-5. Faça push para a branch: `git push origin minha-nova-feature`
-6. Crie um novo Pull Request
-
-## Documentação da API
-
-A documentação da API está disponível através do Swagger UI. Para acessá-la:
-
-1. Certifique-se de que a aplicação está rodando.
-2. Acesse `http://seu-dominio/docs` no seu navegador.
-
-A interface do Swagger UI fornecerá uma visão interativa de todos os endpoints da API, incluindo detalhes sobre os parâmetros de requisição e respostas esperadas.
-
-Para desenvolvedores:
-- A especificação OpenAPI está localizada no arquivo `openapi.yaml` na raiz do projeto.
-- Ao adicionar ou modificar endpoints, atualize o arquivo `openapi.yaml` para manter a documentação precisa e atualizada.
+1. Remover os arquivos de deploy do Kubernetes
+   `make kubectl-deploy-delete`
+2. Pare o minikube
+   `minikube stop`
+3. Delete o minikube
+   `minikube delete`
