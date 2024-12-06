@@ -1,103 +1,115 @@
-# Serviço de Catálogo
+# FIAP - TECH CHALLENGE - SOFTWARE ARCHITECTURE
 
-Este é um serviço de catálogo desenvolvido como parte do desafio técnico da FIAP. O serviço gerencia produtos e categorias, fornecendo operações CRUD através de uma API.
+## INTEGRANTES - GRUPO 47
 
-## Tecnologias Utilizadas
+- RM354121 - Lucas
+- RM354259 - Thiago
+- RM353824 - Raphael
+- RM355935 - Lucas
+- RM354852 - Mauro
 
-- PHP 8.1
-- Slim Framework 4
-- MySQL
-- Docker
-- Composer
-- PHPUnit
+## Documentação DDD - Domain Driven Design
 
-## Estrutura do Projeto
+Link para a documentação do DDD no site do Miro:
 
-O projeto segue os princípios da Clean Architecture:
+[https://miro.com/app/board/uXjVKQcty_w=/](https://miro.com/app/board/uXjVKQcty_w=/)
 
-- `src/Domain`: Contém as entidades e interfaces de repositório
-- `src/Application`: Contém os DTOs e casos de uso
-- `src/Infrastructure`: Contém os controladores da API e implementações de repositório
+Documentação do sistema (DDD) com Event Storming, incluindo todos os passos/tipos de diagrama mostrados na aula 6 do
+módulo de DDD, e utilizando a linguagem ubíqua, dos seguintes fluxos:
 
-## Pré-requisitos
-
-- Docker
-- Docker Compose
-
-## Instalação e Configuração
-
-1. Clone o repositório:
-git clone 
-favicon
-github.com
- cd fiap-tech-challenge-catalogo
+ - Realização do pedido e pagamento; 
+ - Preparação e entrega do pedido.
 
 
-2. Crie um arquivo `.env` na raiz do projeto e configure as variáveis de ambiente:
-DB_HOST=db DB_NAME=catalogo DB_USER=root DB_PASS=sua_senha
+## Passo a passo para inicialização da aplicação
+
+### Se tiver o Make instalado
+
+Use os commandos: 
+
+    `make start`
+
+Para fazer a limpeza da aplicação, use o comando:
+
+    `make clean`
 
 
-3. Inicie os containers Docker:
-docker compose up -d
+### Se não tiver o Make instalado
+
+1. Clone o repositório  
+   `git clone https://github.com/LucasGarbuyo/fiap-tech-challenge.git`
+
+2. Acesse a pasta do projeto com o terminal 
+
+3. Copie o arquivo `.env.example` para `.env`    
+   `cp .env.example .env`
+
+4. Iniciando os containers do Docker.  
+   Esse processo pode demorar um pouco na primeira vez que for executado, pois o docker irá baixar as imagens necessárias para a execução dos containers.  
+   Execute o comando:    
+   `docker-compose up -d`
+
+5. Acesse o container da aplicação com o comando:  
+   `docker exec -it fiap-tech-challenge-php-1 bash`
+
+6. Para instalar as dependências do projeto, execute o comando dentro do container:  
+   `composer install`
+
+7. Crie uma chave para a aplicação com o comando:  
+   `php artisan key:generate`
+
+8. Para criar as tabelas no banco de dados, execute o comando:  
+   `php artisan migrate:fresh`
+
+9. Para popular o banco de dados, execute o comando:  
+   `php artisan db:seed`
+
+10. Acesse a aplicação com o endereço  
+    [http://localhost:8000](http://localhost:8000)
+
+11. Acesse o Swagger com o endereço  
+    [http://localhost:8000/api/documentation](http://localhost:8000/api/documentation)
+
+## Para remover a aplicação
+
+### Se tiver o Make instalado, use o comando:
+
+    `make clean`
+
+### Se não tiver o Make instalado, siga os passos abaixo:
+
+1. Execute o comando  
+   `docker-compose down`
+2. **(Recomendado)** excluir a pasta do mysql dentro de ./docker/database/volumes/mysql. Vai poupar espaço.  
+   `rm -Rf ./docker/database/volumes/mysql`
 
 
-4. Instale as dependências do projeto:
-docker compose exec app composer install
+## Kubernetes
 
+### Requisitos
+1. Docker 
+2. Minikube
 
-5. Execute as migrações do banco de dados:
-docker compose exec app php run_migrations.php
+### Passo a passo para inicialização da aplicação
 
+1. Inicie o Minikube 
+   `minikube start`
+2. Habilite o addon de Ingress no Minikube 
+   `minikube addons enable ingress`
+3. Habilite o addon de Metrics no Minikube 
+   `minikube addons enable metrics-server`
+4. Aplique os arquivos de deploy do Kubernetes
+   `make kubectl-deploy-apply`
+5. Para ver o endereço da aplicação, obtenha o IP do Minikube 
+   `minikube ip`      
+6. Para ver o endereço da aplicação, obtenha o IP do Minikube 
+   `minikube dashboard`      
 
-## Executando os Testes
+### Passo a passo para remover da aplicação
 
-Para executar os testes unitários, use o seguinte comando:
-
-docker compose exec app composer test
-
-
-## Uso da API
-
-A API estará disponível em `http://localhost:8082`. Aqui estão alguns exemplos de endpoints:
-
-### Produtos
-
-- Listar todos os produtos: `GET /produtos`
-- Obter um produto específico: `GET /produtos/{id}`
-- Criar um novo produto: `POST /produtos`
-- Atualizar um produto: `PUT /produtos/{id}`
-- Excluir um produto: `DELETE /produtos/{id}`
-
-### Categorias
-
-- Listar todas as categorias: `GET /categorias`
-- Obter uma categoria específica: `GET /categorias/{id}`
-- Criar uma nova categoria: `POST /categorias`
-- Atualizar uma categoria: `PUT /categorias/{id}`
-- Excluir uma categoria: `DELETE /categorias/{id}`
-
-Para mais detalhes sobre os endpoints e formatos de requisição/resposta, consulte a documentação da API.
-
-## Desenvolvimento
-
-Para adicionar novas funcionalidades ou fazer alterações:
-
-1. Crie uma nova branch: `git checkout -b minha-nova-feature`
-2. Faça suas alterações e adicione testes apropriados
-3. Execute os testes para garantir que tudo está funcionando
-4. Faça commit das suas alterações: `git commit -am 'Adiciona nova feature'`
-5. Faça push para a branch: `git push origin minha-nova-feature`
-6. Crie um novo Pull Request
-
-## Documentação da API
-
-A documentação da API está disponível através do Swagger UI. Para acessá-la:
-
-1. Certifique-se de que a aplicação está rodando.
-2. Acesse `http://seu-dominio/docs` no seu navegador.
-
-A interface do Swagger UI fornecerá uma visão interativa de todos os endpoints da API, incluindo detalhes sobre os parâmetros de requisição e respostas esperadas.
-
-Para desenvolvedores:
-- A especificação OpenAPI está localizada no arquivo `openapi.yaml` na raiz do projeto.
-- Ao adicionar ou modificar endpoints, atualize o arquivo `openapi.yaml` para manter a documentação precisa e atualizada.
+1. Remover os arquivos de deploy do Kubernetes
+   `make kubectl-deploy-delete`
+2. Pare o minikube
+   `minikube stop`
+3. Delete o minikube
+   `minikube delete`
